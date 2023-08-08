@@ -1,7 +1,4 @@
 # cat /etc/ufw/applications.d/oxen-multi-sn
-log_file=/var/log/mSNfixVar.`date +%Y%m%d%Hh%Mm%S`.log
-echo "Output will be written to $log_file"
-touch $log_file
 
 # check variables
 instruction=NOTHING
@@ -22,6 +19,10 @@ elif [ $instr == "zF" ] ; then
    echo "EXECUTES a FULL Update of the BEST Node"
    echo "Then COPIES to all other nodes on the server"
    instruction=UPDATEANDCOPY
+elif [ $instr == "zT" ] ; then
+   echo "Execute code without heavy lifting"
+   echo "This is used mainly for GIT COdespace testing."
+   instruction=TESTING
 else
    if [ $instr == "z" ] ; then
       echo " Error: No Flag Specified. See options below"
@@ -29,22 +30,44 @@ else
       echo " Error: Incorrect Flag Specified! \"$1\" Is NOT an option"
    fi
    echo "Flags are:"
+   echo "T - Execute without oxen related stuff"
    echo "S - Create STATEMENTS to Update Best node"
    echo "U - Execute UPDATES of Best Node"
    echo "C - COPY files from Best to other Nodes"
    echo "F - FULL: UPDATE Best node, COPY to others"
 fi
 
+# set up aliases for TESTING
+if [ $instruction == "TESTING" ] ; then
+   echo "Setting up initial Test variables"
+   alias oxend_all="cat oxend_all_example.txt"
+   status=
+   print_sn_status=
+   log_file=log.mSNfixVar.log
+   rm $log_file
+else
+   cmd_status=status
+   cmd_print_sn_status=print_sn_status
+   log_file=/var/log/mSNfixVar.`date +%Y%m%d%Hh%Mm%S`.log
+fi
+echo "Output will be written to $log_file"
+touch $log_file
+
 # get  list of all the nodes on this server
 counter=0
 NODES=
-for NODE in `oxend_all status | grep "oxend-0"` ; do
+for NODE in `oxend_all $cmd_status | grep "oxend-"` ; do
   # nawk -F":" '{ print $1 }'
    NODEcurr=`echo $NODE | nawk -F: '{ print $1 }'`
    NODES[$counter]=$NODEcurr
    NODEID[$counter]=`echo $NODEcurr | nawk -F- '{ print $2 }'`
    NODENAME[$counter]=`echo "node-${NODEID[$counter]}"`
    #$NODE[1]
+   # set up aliases for TESTING
+   if [ $instruction == "TESTING" ] ; then
+      #cat node_status_msg_example.txt | grep $NODEcurr | nawk -F~ '{ print $2 }' #| read variabllll
+      alias $NODEcurr="cat node_status_msg_example.txt | grep $NODEcurr | nawk -F~ '{ print \$2 }'"
+   fi
    counter=`expr $counter + 1`
 done
 
@@ -52,7 +75,7 @@ done
 counter=0
 BLOCKCREDIT=
 for NODE in ${NODES[*]} ; do
-   credit="$NODE print_sn_status | grep 'Downtime Credits:' | nawk -F\" \" '{ print \$3 }'"
+   credit="$NODE $cmd_print_sn_status | grep 'Downtime Credits:' | nawk -F\" \" '{ print \$3 }'"
    echo $credit > runthisnow.sh
    chmod 700 runthisnow.sh
    . runthisnow.sh > blocks.data
@@ -84,7 +107,7 @@ echo $message && echo $message >>$log_file
 #get second best node
 counter=0
 SECOND_NODE=$counter
-SECOND_NODE_credit=${BLOCKCREDIT[$BEST_NODE]}
+SECOND_NODE_credit=$counter #${BLOCKCREDIT[$BEST_NODE]}
 for NODE in ${NODES[*]} ; do
    THIS_NODE_credit=${BLOCKCREDIT[$counter]}
    if [ $THIS_NODE_credit -gt $SECOND_NODE_credit ] && [ $THIS_NODE_credit -lt $BEST_NODE_credit ] ; then
@@ -98,7 +121,7 @@ message="2nd  Node: ${NODEID[$SECOND_NODE]} ${NODENAME[$SECOND_NODE]} ${NODES[$S
 echo $message && echo $message >>$log_file
 
 # do some cleanup
-df -k . && sleep 1 && sudo journalctl --vacuum-time=2h && sleep 1 && df -k . >>$log_file
+df -k . && sleep 1 && sudo journalctl --vacuum-time=2h && sleep 1 && df -k . | grep "Vacuuming done" >>$log_file
 
 # if instructed to do so, delete the files of the node
 # with the most uptime block reserve, restart it a

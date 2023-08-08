@@ -1,0 +1,5 @@
+oxend-00~No service node is currently known on the network: 0iuewywhfiuweh
+oxend-01~No service node is currently known on the network: 745c642a
+oxend-02~    Downtime Credits: 19 blocks (about 0.63 hours) (Note
+oxend-11~Error: Failed to retrieve service node keys
+oxend-20~    Downtime Credits: 548 blocks (about 0.63 hours) (Note

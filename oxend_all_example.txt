@@ -1,0 +1,23 @@
+oxend-00:
+2023-08-07 19:01:03.843 I Oxen 'Wistful Wagyu' (v10.3.0-1~ubuntu2204)
+Height: 1382490, v10.3.0-1~ubuntu2204(net v19), 8(out)+0(in) connections, uptime 0d0h33m23s
+SN: 9744703641934a706637db27d19f0b1b91585cf9c8149db4c244c455c815a66f DECOMMISSIONED (-40 blocks credit), proof: 32.9 minutes ago, last pings: 4sec (storage), 4sec (lokinet)
+
+oxend-01:
+2023-08-07 19:01:03.877 I Oxen 'Wistful Wagyu' (v10.3.0-1~ubuntu2204)
+Error: Failed to get node info: HTTP request failed: Failed to connect to 127.0.0.1 port 22301 after 0 ms: Connection refused
+
+oxend-02:
+2023-08-07 19:01:03.907 I Oxen 'Wistful Wagyu' (v10.3.0-1~ubuntu2204)
+Error: Failed to get node info: HTTP request failed: Failed to connect to 127.0.0.1 port 22302 after 0 ms: Connection refused
+
+oxend-11:
+2023-08-07 19:01:03.937 I Oxen 'Wistful Wagyu' (v10.3.0-1~ubuntu2204)
+Height: 1382490, v10.3.0-1~ubuntu2204(net v19), 8(out)+0(in) connections, uptime 0d0h28m22s
+SN: 745c642ada9d330f3e861c67d400b4801a706d07d4dbdd0143f04cc5fe2dc8f5 DECOMMISSIONED (49 blocks credit), proof: 27.9 minutes ago, last pings: 16sec (storage), 14sec (lokinet)
+
+oxend-20:
+2023-08-07 19:01:03.974 I Oxen 'Wistful Wagyu' (v10.3.0-1~ubuntu2204)
+Height: 1382490, v10.3.0-1~ubuntu2204(net v19), 8(out)+0(in) connections, uptime 0d0h29m16s
+SN: 03688eaa9391bc404ef15d56e3a0210c2217a71b4ff49615f4daa75c429258cb active, proof: 28.8 minutes ago, last pings: 10sec (storage), 8sec (lokinet)
+
