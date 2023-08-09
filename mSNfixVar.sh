@@ -21,7 +21,7 @@ elif [ $instr == "zF" ] ; then
    instruction=UPDATEANDCOPY
 elif [ $instr == "zT" ] ; then
    echo "Execute code without heavy lifting"
-   echo "This is used mainly for GIT COdespace testing."
+   echo "This is used mainly for GIT Codespace testing."
    instruction=TESTING
 else
    if [ $instr == "z" ] ; then
@@ -38,16 +38,20 @@ else
 fi
 
 # set up aliases for TESTING
-if [ $instruction == "TESTING" ] ; then
+if [ $instruction == "TESTING" ] || \
+   [ $instruction == "NOTHING" ]
+then
    echo "Setting up initial Test variables"
    alias oxend_all="cat oxend_all_example.txt"
    status=
    print_sn_status=
+   urldir="https://raw.githubusercontent.com/pierrrek/lokinet-multi-sn-stability/main/lokirepo"
    log_file=log.mSNfixVar.log
    rm $log_file
 else
    cmd_status=status
    cmd_print_sn_status=print_sn_status
+   urldir="https://public.loki.foundation/loki"
    log_file=/var/log/mSNfixVar.`date +%Y%m%d%Hh%Mm%S`.log
 fi
 echo "Output will be written to $log_file"
@@ -70,6 +74,10 @@ for NODE in `oxend_all $cmd_status | grep "oxend-"` ; do
    fi
    counter=`expr $counter + 1`
 done
+
+if [ $instruction == "TESTING" ] ; then
+   instruction="UPDATEANDCOPY"
+fi
 
 # get the blockcredit of each node
 counter=0
@@ -117,7 +125,7 @@ for NODE in ${NODES[*]} ; do
    counter=`expr $counter + 1`
 done
 
-message="2nd  Node: ${NODEID[$SECOND_NODE]} ${NODENAME[$SECOND_NODE]} ${NODES[$SECOND_NODE]} ${BLOCKCREDIT[$SECOND_NODE]}"
+message="2nd Node : ${NODEID[$SECOND_NODE]} ${NODENAME[$SECOND_NODE]} ${NODES[$SECOND_NODE]} ${BLOCKCREDIT[$SECOND_NODE]}"
 echo $message && echo $message >>$log_file
 
 # do some cleanup
@@ -127,11 +135,15 @@ df -k . && sleep 1 && sudo journalctl --vacuum-time=2h && sleep 1 && df -k . | g
 # with the most uptime block reserve, restart it a
 # number of times so that it can sync
 # it will return downtime errors so monitor it
-if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "UPDATEONLY" ] || [ $instruction == "STATEMENTS" ]  ; then
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "UPDATEONLY" ] || \
+   [ $instruction == "STATEMENTS" ]
+then
+   echo "#####################################################"
+   echo "Create CODE to UPDATE all Database files of BEST Node"
    echo "sudo systemctl stop lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" > runthisnow.sh
    echo "cd /var/lib/oxen/${NODENAME[$BEST_NODE]}/" >> runthisnow.sh
 #   echo "rm sqlite.db ons.db lmdb/data.mdb" >> runthisnow.sh
-   urldir="https://public.loki.foundation/loki"
 #   echo "#### You can try these also to put back the files ####"  >> runthisnow.sh
    echo "sudo curl ${urldir}/sqlite.db >sqlite.db"  >> runthisnow.sh
    echo "sudo curl ${urldir}/ons.db >ons.db" >> runthisnow.sh
@@ -139,30 +151,39 @@ if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "UPDATEONLY" ] || [ 
 #   echo "sudo systemctl restart lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
 #   echo "##### WAIT TILL THE SYSTEM IS RECOMMISSIONED BEFORE CONTINUING #####" >> runthisnow.sh
 #   echo "sudo systemctl stop lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
-   echo "sudo curl ${urldir}/data.mdb >lmdb/data.mdb && sudo systemctl start lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
+   echo "sudo curl ${urldir}/data.mdb >lmdb/data.mdb" >> runthisnow.sh
+   echo "sudo systemctl start lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
    echo "sudo systemctl restart lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
    echo "ll ../node-0*/lmdb/data.mdb && ll ../node-0*/*.db && oxend_all status" >> runthisnow.sh
-   echo "COMMANDS TO BE EXECUTED..."
+   echo "COMMANDS TO BE EXECUTED for UPDATE"
+   echo "----------------------------------"
    cat runthisnow.sh
    if [ $instruction == "STATEMENTS" ]  ; then
       echo "##############################################"
       echo "##     NOT executing now...                 ##"
       echo "##############################################"
       echo "###### Execute these commands yourself! ######"
-      echo "##############################################"
    fi
 fi
 
-if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "UPDATEONLY" ] ; then
-   echo "##############################################"
-   echo "### EXECUTING ... `date`"
-   echo "##############################################"
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "UPDATEONLY" ] || \ 
+   [ $instruction == "TESTING" ]
+then
+   echo "#####################################################"
+   echo "### EXECUTING UPDATE... `date`"
+   echo "#####################################################"
+   echo "### Files Copied! `date`"
    . runthisnow.sh >>$log_file
 fi
 
 # copy the best files to the second best node
-if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "COPYONLY" ] ; then
-   echo "Create CODE to copy files from BEST Node to SECOND Best Node"
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "COPYONLY" ] || \
+   [ $instruction == "STATEMENTS" ]
+then
+   echo "#######################################################"
+   echo "Create CODE to COPY files from Best to SECOND Best Node"
    echo "sudo systemctl stop lokinet-router@${NODEID[$SECOND_NODE]} oxen-storage-server@${NODEID[$SECOND_NODE]} oxen-node@${NODEID[$SECOND_NODE]}" > runthisnow.sh
    echo "sudo systemctl stop lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
    echo "cp /var/lib/oxen/${NODENAME[$BEST_NODE]}/sqlite.db /var/lib/oxen/${NODENAME[$SECOND_NODE]}/sqlite.db" >> runthisnow.sh
@@ -171,20 +192,29 @@ if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "COPYONLY" ] ; then
    echo "sudo systemctl start lokinet-router@${NODEID[$BEST_NODE]} oxen-storage-server@${NODEID[$BEST_NODE]} oxen-node@${NODEID[$BEST_NODE]}" >> runthisnow.sh
    echo "sudo systemctl start lokinet-router@${NODEID[$SECOND_NODE]} oxen-storage-server@${NODEID[$SECOND_NODE]} oxen-node@${NODEID[$SECOND_NODE]}" >> runthisnow.sh
    echo "sudo systemctl restart lokinet-router@${NODEID[$SECOND_NODE]} oxen-storage-server@${NODEID[$SECOND_NODE]} oxen-node@${NODEID[$SECOND_NODE]}" >> runthisnow.sh
-   echo "COMMANDS TO BE EXECUTED..."
+   echo "COMMANDS TO BE EXECUTED for Copy 1"
+   echo "----------------------------------"
    cat runthisnow.sh
-   echo "##############################################"
-   echo "### EXECUTING ... `date`"
-   echo "##############################################"
+fi
+
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "COPYONLY" ]
+then
+   echo "#####################################################"
+   echo "### EXECUTING COPY 1 ... `date`"
+   echo "#####################################################"
    . runthisnow.sh >>$log_file
-   echo "##############################################"
+   echo "#####################################################"
    echo "### Files Copied! `date`"
-   echo "##############################################"
 fi
 
 # copy the second best files to the rest of the nodes
-if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "COPYONLY" ] ; then
-   echo "Create CODE to copy files from SECOND Best Node to all the other nodes"
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "COPYONLY" ] || \
+   [ $instruction == "STATEMENTS" ]
+then
+   echo "#################################################"
+   echo "Create CODE to COPY files from 2nd to OTHER Nodes"
    echo "sudo systemctl stop lokinet-router@${NODEID[$SECOND_NODE]} oxen-storage-server@${NODEID[$SECOND_NODE]} oxen-node@${NODEID[$SECOND_NODE]}" > runthisnow.sh
    counter=0
    for NODE in ${NODES[*]} ; do
@@ -203,14 +233,20 @@ if [ $instruction == "UPDATEANDCOPY" ] || [ $instruction == "COPYONLY" ] ; then
       counter=`expr $counter + 1`
    done
    echo "sudo systemctl start lokinet-router@${NODEID[$SECOND_NODE]} oxen-storage-server@${NODEID[$SECOND_NODE]} oxen-node@${NODEID[$SECOND_NODE]}" >> runthisnow.sh
-   echo "COMMANDS TO BE EXECUTED..."
+   echo "COMMANDS TO BE EXECUTED for Copy 2"
+   echo "----------------------------------"
    cat runthisnow.sh
-   echo "##############################################"
-   echo "### EXECUTING ... `date`"
-   echo "##############################################"
+fi
+
+if [ $instruction == "UPDATEANDCOPY" ] || \
+   [ $instruction == "COPYONLY" ]
+then
+   echo "#####################################################"
+   echo "### EXECUTING COPY 2 ... `date`"
+   echo "#####################################################"
    . runthisnow.sh >>$log_file
-   echo "##############################################"
+   echo "#####################################################"
    echo "### Files Copied! `date`"
-   echo "##############################################"
+   echo "#####################################################"
 fi
 
